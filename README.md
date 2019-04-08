@@ -51,3 +51,5 @@ echo json_encode(bitragem\bitinka::getAssets());
 ?>
 
 ```
+
+Access: https://Bitragem.com
