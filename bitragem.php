@@ -61,12 +61,12 @@ class _3xbit extends Bitragem{
         for ($i = 0; $i < count($book['sell_orders']); $i++) {
             $newBook['asks'][] = array(
                 'price' => $book['sell_orders'][$i]['unit_price'] * $ticker['CREDIT_'.$asset]['dollar_brl'],
-                'volume' => $book['sell_orders'][$i]['quantity']);
+                'volume' => floatval($book['sell_orders'][$i]['quantity']));
         }
         for ($i = 0; $i < count($book['buy_orders']); $i++) {
             $newBook['bids'][] = array(
                 'price' => $book['buy_orders'][$i]['unit_price'] * $ticker['CREDIT_'.$asset]['dollar_brl'],
-                'volume' => $book['buy_orders'][$i]['quantity']);
+                'volume' => floatval($book['buy_orders'][$i]['quantity']));
         }
 
         return $newBook;
@@ -77,11 +77,20 @@ class _3xbit extends Bitragem{
 class acasadobitcoin extends Bitragem{
     static private $assets = array('BTC', 'ETH');
     public function getBook($asset){
-        if (in_array($asset, $assets) == false) return null;
+
+        if (in_array($asset, self::$assets) == false) return null;
+        switch ($asset) {
+            case 'BTC':
+                $asset = 1;
+                break;
+            case 'ETH':
+                $asset = 2;
+                break;
+        }
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $book = self::get_url_contents('https://apicasabitcoinprod.alphapoint.com:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=1&Depth=1');
+        $book = self::get_url_contents('https://apicasabitcoinprod.alphapoint.com:8443/AP/GetL2Snapshot?OMSId='.$asset.'&Depth=1');
         
         for ($i = 0; $i < count($book); $i++) {
             if ($book[$i][9] == 1) {
@@ -103,7 +112,7 @@ class bitblue extends Bitragem{
     static private $assets = array('BTC','ETH','XRP', 'DASH');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
         
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -124,10 +133,10 @@ class bitblue extends Bitragem{
 }
 
 class bitinka extends Bitragem{
-    static private $assets = array('BTC', 'ETH');
+    static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -151,7 +160,7 @@ class bitcambio extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -175,7 +184,7 @@ class bitcointoyou extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -199,7 +208,7 @@ class bitnuvem extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -223,7 +232,7 @@ class bitpreco extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -247,7 +256,7 @@ class bitrecife extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -271,7 +280,7 @@ class bitcointrade extends Bitragem{
     static private $assets = array('BTC','ETH','LTC' );
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -295,7 +304,7 @@ class brabex extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -319,7 +328,7 @@ class brasilbitcoin extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -343,7 +352,7 @@ class braziliex extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC', 'DASH');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -367,7 +376,7 @@ class btcbolsa extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -393,7 +402,7 @@ class coinbene extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -417,7 +426,7 @@ class coin2001 extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -441,7 +450,7 @@ class coinext extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC', 'XRP');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
         switch ($asset) {
             case 'BTC':
                 $asset = 1;
@@ -482,7 +491,7 @@ class citcoin extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -508,7 +517,7 @@ class cryptomarket extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -535,7 +544,7 @@ class flowbtc extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -559,7 +568,7 @@ class foxbit extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         switch ($asset) {
             case 'BTC':
@@ -598,7 +607,7 @@ class intertradec extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -627,7 +636,7 @@ class mercadobitcoin extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -651,7 +660,7 @@ class modiax extends Bitragem{
     static private $assets = array('BTC', 'XRP');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -675,19 +684,23 @@ class negociecoins extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC', 'DASH', 'BCH', 'BTG');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://broker.negociecoins.com.br/api/v3/'.$asset.'BRL/orderbook');
         
         for ($i = 0; $i < count($book['ask']); $i++) {
-            $newBook['asks'][] = array('price' => floatval($book['ask'][$i]['price']),
-                'volume' => floatval($book['ask'][$i]['quantity']));
+            $newBook['asks'][] = array(
+                'price' => floatval($book['ask'][$i]['price']),
+                'volume' => floatval($book['ask'][$i]['quantity'])
+            );
         }
         for ($i = 0; $i < count($book['bid']); $i++) {
-            $newBook['bids'][] = array('price' => floatval($book['bid'][$i]['price']),
-                'volume' => floatval($book['bid'][$i]['quantity']));
+            $newBook['bids'][] = array(
+                'price' => floatval($book['bid'][$i]['price']),
+                'volume' => floatval($book['bid'][$i]['quantity'])
+            );
         }
         
         return $newBook;
@@ -699,7 +712,7 @@ class omnitrade extends Bitragem{
     static private $assets = array('BTC', 'ETH', 'LTC', 'DASH');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -725,7 +738,7 @@ class pagcripto extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -751,7 +764,7 @@ class pitaiatrade extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -777,7 +790,7 @@ class profitfy extends Bitragem{
     static private $assets = array('BTC', 'DCR');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -801,7 +814,7 @@ class satoshitango extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -824,7 +837,7 @@ class tembtc extends Bitragem{
     static private $assets = array('BTC', 'LTC', 'BCH');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
@@ -848,12 +861,12 @@ class walltime extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
         
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $data = getFromUrl('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/meta.json?now=1517922306634.319625.92');
-        $book = getFromUrl('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/order-book/v8878cb_r' . $data["current_round"] . '_p0.json?now=1517922306795.319787.02');
+        $data = self::get_url_contents('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/meta.json?now=1517922306634.319625.92');
+        $book = self::get_url_contents('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/order-book/v8878cb_r' . $data["current_round"] . '_p0.json?now=1517922306795.319787.02');
         
         for ($i = 0; $i < count($book['xbt-brl']); $i++) {
             $newBook['asks'][] = array('price' => eval('return ' . $book['xbt-brl'][$i][1] . ';') / eval('return ' . $book['xbt-brl'][$i][0] . ';'),
@@ -864,7 +877,7 @@ class walltime extends Bitragem{
                 'volume' => eval('return ' . $book['brl-xbt'][$i][1] . ';'));
         }
 
-        $book = getFromUrl('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/order-book/v8878cb_r' . $data["current_round"] . '_p1.json?now=1517922306795.319787.02');
+        $book = self::get_url_contents('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/order-book/v8878cb_r' . $data["current_round"] . '_p1.json?now=1517922306795.319787.02');
         
         for ($i = 0; $i < count($book['xbt-brl']); $i++) {
             $newBook['asks'][] = array('price' => eval('return ' . $book['xbt-brl'][$i][1] . ';') / eval('return ' . $book['xbt-brl'][$i][0] . ';'),
@@ -883,7 +896,7 @@ class walltime extends Bitragem{
 class welcoin extends Bitragem{
     static private $assets = array('BTC');
     public function getBook($asset){
-        if (in_array($asset, $assets) == false) return null;
+        if (in_array($asset, self::$assets) == false) return null;
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
