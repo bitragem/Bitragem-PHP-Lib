@@ -90,7 +90,7 @@ class acasadobitcoin extends Bitragem{
 
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $book = self::get_url_contents('https://apicasabitcoinprod.alphapoint.com:8443/AP/GetL2Snapshot?OMSId='.$asset.'&Depth=1');
+        $book = self::get_url_contents('https://apicasabitcoinprod.alphapoint.com:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId='.$asset.'&Depth=1');
         
         for ($i = 0; $i < count($book); $i++) {
             if ($book[$i][9] == 1) {
@@ -133,7 +133,7 @@ class bitblue extends Bitragem{
 }
 
 class bitinka extends Bitragem{
-    static private $assets = array('BTC');
+    static private $assets = array('BTC', 'ETH');
     public function getBook($asset){
         
         if (in_array($asset, self::$assets) == false) return null;
@@ -382,7 +382,7 @@ class btcbolsa extends Bitragem{
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://apiv2.btcbolsa.com/v2/orders/order-book/'.$asset.'_BRL');
         
-        for ($i = count($book['data']['asks']); $i > 0; $i--) {
+        for ($i = count($book['data']['asks'])-1; $i > 0; $i--) {
             $newBook['asks'][] = array(
                 'price' => $book['data']['asks'][$i]['price_unity'],
                 'volume' => $book['data']['asks'][$i]['amount']);
@@ -681,7 +681,7 @@ class modiax extends Bitragem{
 }
 
 class negociecoins extends Bitragem{
-    static private $assets = array('BTC', 'ETH', 'LTC', 'DASH', 'BCH', 'BTG');
+    static private $assets = array('BTC', 'LTC', 'DASH', 'BCH', 'BTG');
     public function getBook($asset){
         
         if (in_array($asset, self::$assets) == false) return null;
