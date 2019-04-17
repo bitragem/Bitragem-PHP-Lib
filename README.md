@@ -43,11 +43,13 @@ Welcoin
 include 'bitragem.php';
 
 // get assets integrated into the library
-echo json_encode(bitragem\bitinka::getAssets());
+echo json_encode(bitragem\pagcripto::getAssets());
 
 // get orders
-//echo json_encode(bitragem\bitinka::getBook());
+//echo json_encode(bitragem\foxbit::getBook('BTC'));
 
+// get orders
+//echo json_encode(bitragem\negociecoins::getTicker('DASH'));
 ?>
 
 ```
