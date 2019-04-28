@@ -39,10 +39,20 @@ class Bitragem {
         $json = file_get_contents($input);
         return (json_decode($json, true));
     }
+    /**
+     * Get Class Name
+     * @param String $input
+     * @return String
+     * Ex.:
+     * get_id(__CLASS__);
+     */
+    public function get_id($input) {
+        return substr(strrchr($input, "\\"), 1);
+    }
 }
 
 class _3xbit extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC', 'DASH');
+    static private $assets = array('BTC', 'BCH', 'DASH', 'ETH', 'LTC', 'SMART');
     /**
      * Get Array of orders
      * @param String $asset
@@ -54,21 +64,21 @@ class _3xbit extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.exchange.3xbit.com.br/v1/orderbook/credit/' . $asset);
-        $ticker = self::get_url_contents('https://api.exchange.3xbit.com.br/ticker/brl/');
+        $ticker = self::get_url_contents('https://api.exchange.3xbit.com.br/ticker/brl/')['CREDIT_' . $asset];
 
         for ($i = 0; $i < count($book['sell_orders']); $i++) {
             $newBook['asks'][] = array(
-                'price' => $book['sell_orders'][$i]['unit_price'] * $ticker['CREDIT_' . $asset]['dollar_brl'],
+                'price' => $book['sell_orders'][$i]['unit_price'] * $ticker['dollar_brl'],
                 'volume' => floatval($book['sell_orders'][$i]['quantity']),
             );
         }
         for ($i = 0; $i < count($book['buy_orders']); $i++) {
             $newBook['bids'][] = array(
-                'price' => $book['buy_orders'][$i]['unit_price'] * $ticker['CREDIT_' . $asset]['dollar_brl'],
+                'price' => $book['buy_orders'][$i]['unit_price'] * $ticker['dollar_brl'],
                 'volume' => floatval($book['buy_orders'][$i]['quantity']),
             );
         }
@@ -80,19 +90,16 @@ class _3xbit extends Bitragem {
             return null;
         }
 
-        $data = getFromURL('https://api.exchange.3xbit.com.br/ticker/brl/')['CREDIT_' . $asset];
+        $data = self::get_url_contents('https://api.exchange.3xbit.com.br/ticker/brl/')['CREDIT_' . $asset];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['ask'];
         $ticker['bid'] = $data['bid'];
-        $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['vol'] = floatval($data['volume']);
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -113,7 +120,7 @@ class acasadobitcoin extends Bitragem {
             break;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://apicasabitcoinprod.alphapoint.com:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=' . $asset . '&Depth=1');
@@ -138,8 +145,50 @@ class acasadobitcoin extends Bitragem {
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
+}
+
+class batexchange extends Bitragem {
+    static private $assets = array('ETH');
+    public function getBook($asset) {
+
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+
+        $newBook['id'] = self::get_id(__CLASS__);
+        $newBook['asset'] = $asset;
+        $newBook['base'] = 'BRL';
+        $book = self::get_url_contents('https://broker.batexchange.com.br/api/v3/' . $asset . 'BRL/orderbook');
+
+        for ($i = 0; $i < count($book['ask']); $i++) {
+            $newBook['asks'][] = array(
+                'price' => floatval($book['ask'][$i]['price']),
+                'volume' => floatval($book['ask'][$i]['quantity']),
+            );
+        }
+        for ($i = 0; $i < count($book['bid']); $i++) {
+            $newBook['bids'][] = array(
+                'price' => floatval($book['bid'][$i]['price']),
+                'volume' => floatval($book['bid'][$i]['quantity']),
+            );
+        }
+
+        return $newBook;
+    }
+    public function getTicker($asset) {
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+        $data = self::get_url_contents('https://broker.batexchange.com.br/api/v3/' . $asset . 'BRL/ticker');
+        $ticker['last'] = $data['last'];
+        $ticker['ask'] = $data['sell'];
+        $ticker['bid'] = $data['buy'];
+        $ticker['vol'] = $data['vol'];
+        $ticker['id'] = self::get_id(__CLASS__);
+        return $ticker;
+    }
+    public function getAssets() {
+        return self::$assets;
     }
 }
 
@@ -151,7 +200,7 @@ class bitblue extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://bitblue.com/api/order-book/' . strtolower($asset))['order-book'];
@@ -180,14 +229,11 @@ class bitblue extends Bitragem {
         $ticker['ask'] = $data['ask'];
         $ticker['bid'] = $data['bid'];
         $ticker['vol'] = $data['24h_volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -199,21 +245,21 @@ class bitinka extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $book = self::get_url_contents('https://www.bitinka.com/api/apinka/order_book/' . $asset . '_BRL?format=json');
+        $book = self::get_url_contents('https://www.bitinka.com/api/apinka/order_book/' . $asset . '_BRL?format=json')['orders'];
 
-        for ($i = 0; $i < count($book['orders']['purchases']['BRL']); $i++) {
+        for ($i = 0; $i < count($book['purchases']['BRL']); $i++) {
             $newBook['asks'][] = array(
-                'price' => $book['orders']['purchases']['BRL'][$i]['Price'],
-                'volume' => $book['orders']['purchases']['BRL'][$i]['Amount'],
+                'price' => $book['purchases']['BRL'][$i]['Price'],
+                'volume' => $book['purchases']['BRL'][$i]['Amount'],
             );
         }
-        for ($i = 0; $i < count($book['orders']['sales']['BRL']); $i++) {
+        for ($i = 0; $i < count($book['sales']['BRL']); $i++) {
             $newBook['bids'][] = array(
-                'price' => $book['orders']['sales']['BRL'][$i]['Price'],
-                'volume' => $book['orders']['sales']['BRL'][$i]['Amount'],
+                'price' => $book['sales']['BRL'][$i]['Price'],
+                'volume' => $book['sales']['BRL'][$i]['Amount'],
             );
         }
 
@@ -221,9 +267,6 @@ class bitinka extends Bitragem {
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -235,7 +278,7 @@ class bitcambio extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://bitcambio_api.blinktrade.com/api/v1/BRL/orderbook');
@@ -260,19 +303,16 @@ class bitcambio extends Bitragem {
             return null;
         }
 
-        $data = getFromURL('https://bitcambio_api.blinktrade.com/api/v1/BRL/ticker?crypto_currency=' . $asset);
+        $data = self::get_url_contents('https://bitcambio_api.blinktrade.com/api/v1/BRL/ticker?crypto_currency=' . $asset);
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -282,7 +322,7 @@ class bitcointoyou extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://www.bitcointoyou.com/api/orderbook.aspx');
@@ -304,19 +344,58 @@ class bitcointoyou extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://www.bitcointoyou.com/API/ticker.aspx')['ticker'];
+        $data = self::get_url_contents('https://www.bitcointoyou.com/API/ticker.aspx')['ticker'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
+}
+
+class bitja extends Bitragem {
+    static private $assets = array('BTC', 'ETH', 'LTC', 'DASH', 'DCR' ,'XLM');
+    public function getBook($asset) {
+
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+
+        $newBook['id'] = self::get_id(__CLASS__);
+        $newBook['asset'] = $asset;
+        $newBook['base'] = 'BRL';
+        $book = self::get_url_contents('https://api.bitja.com.br/api/coins/ticker/'.strtolower($asset).'brl');
+
+        $newBook['asks'][] = array(
+            'price' => floatval($book['price_sell']),
+            'volume' => 1,
+        );
+
+        $newBook['bids'][] = array(
+            'price' => floatval($book['price_buy']),
+            'volume' => 1,
+        );
+
+        return $newBook;
+    }
+    public function getTicker($asset) {
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+        $data = self::get_url_contents('https://api.bitja.com.br/api/coins/ticker/'.strtolower($asset).'brl');
+        $ticker['last'] = null;
+        $ticker['ask'] = floatval($data['price_sell']);
+        $ticker['bid'] = floatval($data['price_buy']);
+        $ticker['vol'] = floatval($data['volume24h']);
+        $ticker['id'] = self::get_id(__CLASS__);
+        return $ticker;
+    }
+    public function getAssets() {
+        return self::$assets;
     }
 }
 
@@ -326,7 +405,7 @@ class bitnuvem extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://bitnuvem.com/api/BTC/orderbook');
@@ -348,19 +427,16 @@ class bitnuvem extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://bitnuvem.com/api/BTC/ticker')['ticker'];
+        $data = self::get_url_contents('https://bitnuvem.com/api/BTC/ticker')['ticker'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -372,10 +448,10 @@ class bitpreco extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $book = self::get_url_contents('https://cors.io/?https://api.bitpreco.com/btc-brl/orderbook');
+        $book = self::get_url_contents('https://api.bitpreco.com/btc-brl/orderbook');
 
         for ($i = 0; $i < count($book['asks']); $i++) {
             $newBook['asks'][] = array(
@@ -396,19 +472,16 @@ class bitpreco extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.bitpreco.com/btc-brl/ticker');
+        $data = self::get_url_contents('https://api.bitpreco.com/btc-brl/ticker');
         $ticker['last'] = $data['last'];
         $ticker['ask'] = null;
         $ticker['bid'] = null;
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -420,7 +493,7 @@ class bitrecife extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://exchange.bitrecife.com.br/api/v3/public/getorderbook?market=' . $asset . '_BRL');
@@ -444,29 +517,26 @@ class bitrecife extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://exchange.bitrecife.com.br/api/v3/public/getmarketsummary?market=' . $asset . '_BRL')['result'][0];
+        $data = self::get_url_contents('https://exchange.bitrecife.com.br/api/v3/public/getmarketsummary?market=' . $asset . '_BRL')['result'][0];
         $ticker['last'] = $data['Last'];
         $ticker['ask'] = $data['Ask'];
         $ticker['bid'] = $data['Bid'];
         $ticker['vol'] = $data['Volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class bitcointrade extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC');
+    static private $assets = array('BTC', 'BCH', 'ETH', 'LTC', 'XRP');
     public function getBook($asset) {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.bitcointrade.com.br/v2/public/BRL' . $asset . '/orders');
@@ -488,19 +558,16 @@ class bitcointrade extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.bitcointrade.com.br/v2/public/BRLBTC/ticker')['data'];
+        $data = self::get_url_contents('https://api.bitcointrade.com.br/v2/public/BRLBTC/ticker')['data'];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -510,7 +577,7 @@ class brabex extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://exchange.brabex.com.br/api/v1/BRL/orderbook?crypto_currency=BTC');
@@ -532,19 +599,16 @@ class brabex extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://exchange.brabex.com.br/api/v1/BRL/ticker?crypto_currency=BTC');
+        $data = self::get_url_contents('https://exchange.brabex.com.br/api/v1/BRL/ticker?crypto_currency=BTC');
         $ticker['last'] = $data['last'];
-        $ticker['ask'] = $data['ask'];
-        $ticker['bid'] = $data['bid'];
+        $ticker['ask'] = $data['sell'];
+        $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -554,7 +618,7 @@ class brasilbitcoin extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://brasilbitcoin.com.br/API/orderbook/BTC');
@@ -576,29 +640,26 @@ class brasilbitcoin extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://brasilbitcoin.com.br/API/prices/BTC');
+        $data = self::get_url_contents('https://brasilbitcoin.com.br/API/prices/BTC');
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class braziliex extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC', 'DASH');
+    static private $assets = array('BTC', 'BCH', 'BTG', 'ETH', 'LTC', 'DASH');
     public function getBook($asset) {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://braziliex.com/api/v1/public/orderbook/' . strtolower($asset) . '_brl');
@@ -620,19 +681,16 @@ class braziliex extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://braziliex.com/api/v1/public/ticker/' . strtolower($asset) . '_brl');
+        $data = self::get_url_contents('https://braziliex.com/api/v1/public/ticker/' . strtolower($asset) . '_brl');
         $ticker['last'] = $data['lowestAsk'];
         $ticker['ask'] = $data['lowestAsk'];
         $ticker['bid'] = $data['highestBid'];
         $ticker['vol'] = $data['baseVolume24'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -642,7 +700,7 @@ class btcbolsa extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://apiv2.btcbolsa.com/v2/orders/order-book/' . $asset . '_BRL');
@@ -664,19 +722,16 @@ class btcbolsa extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://apiv2.btcbolsa.com/v2/orders/ticker/' . $asset . '_BRL')['data'];
+        $data = self::get_url_contents('https://apiv2.btcbolsa.com/v2/orders/ticker/' . $asset . '_BRL')['data'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['buy']);
         $ticker['bid'] = floatval($data['sell']);
         $ticker['vol'] = floatval($data['volume']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -688,7 +743,7 @@ class coinbene extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('http://api.coinbene.com/v1/market/orderbook?symbol=' . $asset . 'brl');
@@ -712,19 +767,16 @@ class coinbene extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('http://api.coinbene.com/v1/market/ticker?symbol=' . $asset . 'brl')['ticker'];
+        $data = self::get_url_contents('http://api.coinbene.com/v1/market/ticker?symbol=' . $asset . 'brl')['ticker'][0];
         $ticker['last'] = floatval($data['last']);
-        $ticker['ask'] = floatval($data['buy']);
-        $ticker['bid'] = floatval($data['sell']);
+        $ticker['ask'] = floatval($data['ask']);
+        $ticker['bid'] = floatval($data['bid']);
         $ticker['vol'] = floatval($data['24hrVol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -736,7 +788,7 @@ class coin2001 extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://coin2001.com/api/v1/public/getOrderBook?market=BRL_' . $asset . '&type=both');
@@ -760,19 +812,16 @@ class coin2001 extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://coin2001.com/api/v1/public/getMarketSummary?market=BRL-' . $asset)['result'];
+        $data = self::get_url_contents('https://coin2001.com/api/v1/public/getMarketSummary?market=BRL-' . $asset)['result'];
         $ticker['last'] = $data['Last'];
         $ticker['ask'] = $data['Ask'];
         $ticker['bid'] = $data['Bid'];
         $ticker['vol'] = $data['Volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -799,7 +848,7 @@ class coinext extends Bitragem {
             break;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.coinext.com.br:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=' . $asset . '&Depth=1');
@@ -841,19 +890,16 @@ class coinext extends Bitragem {
             break;
         }
 
-        $data = getFromURL('http://apex.coinext.com.br/tickers')[$asset];
+        $data = self::get_url_contents('http://apex.coinext.com.br/tickers')[$asset];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -865,7 +911,7 @@ class citcoin extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.citcoin.com.br/v1/btc/orderbook/');
@@ -889,35 +935,32 @@ class citcoin extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.citcoin.com.br/v1/btc/ticker/');
+        $data = self::get_url_contents('https://api.citcoin.com.br/v1/btc/ticker/');
         $ticker['last'] = null;
         $ticker['ask'] = null;
         $ticker['bid'] = null;
-        $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['vol'] = floatval($data['volume']);
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class cryptomarket extends Bitragem {
-    static private $assets = array('BTC');
+    static private $assets = array('BTC', 'ETH');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
-        $bookAsk = self::get_url_contents('https://api.cryptomkt.com/v1/book?market=BTCBRL&type=sell&page=0');
-        $bookBid = self::get_url_contents('https://api.cryptomkt.com/v1/book?market=BTCBRL&type=buy&page=0');
+        $bookAsk = self::get_url_contents('https://api.cryptomkt.com/v1/book?market=' . $asset . 'BRL&type=sell&page=0');
+        $bookBid = self::get_url_contents('https://api.cryptomkt.com/v1/book?market=' . $asset . 'BRL&type=buy&page=0');
 
         for ($i = 0; $i < count($bookAsk['data']); $i++) {
             $newBook['asks'][] = array(
@@ -938,31 +981,28 @@ class cryptomarket extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.cryptomkt.com/v1/ticker?market=BTCBRL')['data'][0];
+        $data = self::get_url_contents('https://api.cryptomkt.com/v1/ticker?market=' . $asset . 'BRL')['data'][0];
         $ticker['last'] = floatval($data['last_price']);
         $ticker['ask'] = floatval($data['ask']);
         $ticker['bid'] = floatval($data['bid']);
         $ticker['vol'] = floatval($data['volume']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class flowbtc extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'EOS', 'XRP');
+    static private $assets = array('BTC', 'BCH', 'ETH', 'EOS', 'XRP');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://publicapi.flowbtc.com.br/v1/book/' . $asset . 'BRL?depth=3000');
@@ -986,19 +1026,16 @@ class flowbtc extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://publicapi.flowbtc.com.br/ticker/' . $asset . 'BRL')['data'];
+        $data = self::get_url_contents('https://publicapi.flowbtc.com.br/ticker/' . $asset . 'BRL')['data'];
         $ticker['last'] = floatval($data['LastTradedPx']);
         $ticker['ask'] = floatval($data['BestOffer']);
         $ticker['bid'] = floatval($data['BestBid']);
         $ticker['vol'] = floatval($data['Rolling24HrVolume']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1022,7 +1059,7 @@ class foxbit extends Bitragem {
             break;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://apifoxbitprodlb.alphapoint.com:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=' . $asset . '&Depth=1');
@@ -1047,9 +1084,6 @@ class foxbit extends Bitragem {
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class intertradec extends Bitragem {
@@ -1060,7 +1094,7 @@ class intertradec extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://app.intertradec.com.br/api/v1/public/booking/' . $asset . '_BRL');
@@ -1086,31 +1120,28 @@ class intertradec extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://app.intertradec.com/api/v1/public/ticker')[$asset . '_BRL'];
+        $data = self::get_url_contents('https://app.intertradec.com/api/v1/public/ticker')[$asset . '_BRL'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = null;
         $ticker['bid'] = null;
         $ticker['vol'] = null;
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class mercadobitcoin extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC', 'XRP');
+    static private $assets = array('BTC', 'BCH', 'BTG', 'ETH', 'LTC', 'XRP');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://www.mercadobitcoin.net/api/' . $asset . '/orderbook/');
@@ -1134,19 +1165,16 @@ class mercadobitcoin extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://www.mercadobitcoin.net/api/' . $asset . '/ticker/')['ticker'];
+        $data = self::get_url_contents('https://www.mercadobitcoin.net/api/' . $asset . '/ticker/')['ticker'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1158,7 +1186,7 @@ class modiax extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://app.modiax.com/api/v2/order_book?market=' . strtolower($asset) . 'brl');
@@ -1182,31 +1210,28 @@ class modiax extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://app.modiax.com/api/v2/tickers/' . strtolower($asset) . 'brl')['ticker'];
+        $data = self::get_url_contents('https://app.modiax.com/api/v2/tickers/' . strtolower($asset) . 'brl')['ticker'];
         $ticker['last'] = floatval($data['last']);
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class negociecoins extends Bitragem {
-    static private $assets = array('BTC', 'LTC', 'DASH', 'BCH', 'BTG');
+    static private $assets = array('BTC', 'BCH', 'LTC', 'DASH', 'BCH', 'BTG');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://broker.negociecoins.com.br/api/v3/' . $asset . 'BRL/orderbook');
@@ -1230,31 +1255,28 @@ class negociecoins extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://broker.negociecoins.com.br/api/v3/' . $asset . 'BRL/ticker');
+        $data = self::get_url_contents('https://broker.negociecoins.com.br/api/v3/' . $asset . 'BRL/ticker');
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class omnitrade extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC', 'DASH');
+    static private $assets = array('BTC', 'BCH', 'BTG', 'DCR', 'DASH' ,'ETH', 'LTC');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://omnitrade.io/api/v2/order_book?market=' . strtolower($asset) . 'brl&asks_limit=200&bids_limit=200');
@@ -1278,19 +1300,16 @@ class omnitrade extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://omnitrade.io/api/v2/tickers/' . strtolower($asset) . 'brl')['ticker'];
+        $data = self::get_url_contents('https://omnitrade.io/api/v2/tickers/' . strtolower($asset) . 'brl')['ticker'];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = floatval($data['vol']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1302,7 +1321,7 @@ class pagcripto extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.pagcripto.com.br/v1/BTC/orders');
@@ -1326,19 +1345,16 @@ class pagcripto extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.pagcripto.com.br/v1/BTC/ticker')['data'];
+        $data = self::get_url_contents('https://api.pagcripto.com.br/v1/BTC/ticker')['data'];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1350,7 +1366,7 @@ class pitaiatrade extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.pitaiatrade.com/v1/orderbook');
@@ -1374,19 +1390,16 @@ class pitaiatrade extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.pitaiatrade.com/v1/ticker')['ticker'];
+        $data = self::get_url_contents('https://api.pitaiatrade.com/v1/ticker')['ticker'];
         $ticker['last'] = null;
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1398,7 +1411,7 @@ class profitfy extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://profitfy.trade/api/v1/public/orderbook/BRL/' . strtolower($asset));
@@ -1422,31 +1435,28 @@ class profitfy extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://profitfy.trade/api/v1/public/ticker/BTC/BRL')[0];
+        $data = self::get_url_contents('https://profitfy.trade/api/v1/public/ticker/BTC/BRL')[0];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class satoshitango extends Bitragem {
-    static private $assets = array('BTC', 'ETH', 'LTC', 'BCH', 'XRP');
+    static private $assets = array('BTC', 'BCH', 'ETH', 'LTC', 'XRP');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://api.satoshitango.com/v3/ticker/BRL')['data']['ticker'][$asset];
@@ -1467,19 +1477,16 @@ class satoshitango extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://api.satoshitango.com/v3/ticker/BRL')['data']['ticker'][$asset];
+        $data = self::get_url_contents('https://api.satoshitango.com/v3/ticker/BRL')['data']['ticker'][$asset];
         $ticker['last'] = null;
         $ticker['ask'] = $data['ask'];
         $ticker['bid'] = $data['bid'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1491,7 +1498,7 @@ class tembtc extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://broker.tembtc.com.br/api/v3/' . $asset . 'BRL/orderbook');
@@ -1515,19 +1522,16 @@ class tembtc extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://broker.tembtc.com.br/api/v3/' . $asset . 'BRL/ticker');
+        $data = self::get_url_contents('https://broker.tembtc.com.br/api/v3/' . $asset . 'BRL/ticker');
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
 
@@ -1539,7 +1543,7 @@ class walltime extends Bitragem {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $data = self::get_url_contents('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/meta.json?now=1517922306634.319625.92');
@@ -1579,30 +1583,27 @@ class walltime extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/walltime-info.json')['BRL_XBT'];
+        $data = self::get_url_contents('https://s3.amazonaws.com/data-production-walltime-info/production/dynamic/walltime-info.json')['BRL_XBT'];
         $ticker['last'] = floatval($data['last_inexact']);
         $ticker['ask'] = floatval($data['lowest_ask_inexact']);
         $ticker['bid'] = floatval($data['highest_bid_inexact']);
         $ticker['vol'] = floatval($data['quote_volume24h_inexact']);
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
     }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
-    }
 }
 
 class welcoin extends Bitragem {
-    static private $assets = array('BTC');
+    static private $assets = array('BTC', 'BCH');
     public function getBook($asset) {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
 
-        $newBook['id'] = self::id();
+        $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = 'BRL';
         $book = self::get_url_contents('https://broker.welcoin.com.br/api/v3/' . $asset . 'BRL/orderbook');
@@ -1626,18 +1627,15 @@ class welcoin extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = getFromURL('https://broker.welcoin.com.br/api/v3/' . $asset . 'BRL/ticker');
+        $data = self::get_url_contents('https://broker.welcoin.com.br/api/v3/' . $asset . 'BRL/ticker');
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
-        $ticker['id'] = self::id();
+        $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
     public function getAssets() {
         return self::$assets;
-    }
-    private function id() {
-        return substr(strrchr(__CLASS__, "\\"), 1);
     }
 }
