@@ -2,6 +2,7 @@
 
 /**
  * Bitragem's official php lib
+ * v 1.1.0
  * https://bitragem.com/
  */
 namespace bitragem;
@@ -91,9 +92,9 @@ class _3xbit extends Bitragem {
         }
 
         $data = self::get_url_contents('https://api.exchange.3xbit.com.br/ticker/brl/')['CREDIT_' . $asset];
-        $ticker['last'] = $data['last'];
-        $ticker['ask'] = $data['ask'];
-        $ticker['bid'] = $data['bid'];
+        $ticker['last'] = floatval($data['last']);
+        $ticker['ask'] = floatval($data['ask']);
+        $ticker['bid'] = floatval($data['bid']);
         $ticker['vol'] = floatval($data['volume']);
         $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
@@ -949,7 +950,7 @@ class citcoin extends Bitragem {
 }
 
 class cryptomarket extends Bitragem {
-    static private $assets = array('BTC', 'ETH');
+    static private $assets = array('BTC', 'ETH', 'EOS');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
@@ -1224,7 +1225,7 @@ class modiax extends Bitragem {
 }
 
 class negociecoins extends Bitragem {
-    static private $assets = array('BTC', 'BCH', 'LTC', 'DASH', 'BCH', 'BTG');
+    static private $assets = array('BTC', 'BTG', 'BCH', 'LTC', 'DASH', 'BCH');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
@@ -1260,6 +1261,50 @@ class negociecoins extends Bitragem {
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['vol'];
+        $ticker['id'] = self::get_id(__CLASS__);
+        return $ticker;
+    }
+    public function getAssets() {
+        return self::$assets;
+    }
+}
+
+class newcash extends Bitragem {
+    static private $assets = array('BTC', 'BTG', 'LTC', 'DASH');
+    public function getBook($asset) {
+
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+
+        $newBook['id'] = self::get_id(__CLASS__);
+        $newBook['asset'] = $asset;
+        $newBook['base'] = 'BRL';
+        $book = self::get_url_contents('https://newcash.exchange/apiv2/ordens/'.$asset.':BRL');
+        for ($i = 0; $i < count($book['venda']); $i++) {
+            $newBook['asks'][] = array(
+                'price' => floatval($book['venda'][$i]['preco']),
+                'volume' => floatval($book['venda'][$i]['volume']),
+            );
+        }
+        for ($i = 0; $i < count($book['compra']); $i++) {
+            $newBook['bids'][] = array(
+                'price' => floatval($book['compra'][$i]['preco']),
+                'volume' => floatval($book['compra'][$i]['volume']),
+            );
+        }
+
+        return $newBook;
+    }
+    public function getTicker($asset) {
+        if (!in_array($asset, self::$assets)) {
+            return null;
+        }
+        $data = self::get_url_contents('https://newcash.exchange/apiv2/ticket/market/'.$asset.':BRL')['market'];
+        $ticker['last'] = floatval($data['lastPrice']);
+        $ticker['ask'] = floatval($data['sellPrice']);
+        $ticker['bid'] = floatval($data['buyPrice']);
+        $ticker['vol'] = floatval($data['volumeCurrency']);
         $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
