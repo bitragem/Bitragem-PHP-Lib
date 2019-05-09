@@ -2,12 +2,12 @@
 
 /**
  * Bitragem's official php lib
- * v 1.1.0
+ * v 1.1.1
  * https://bitragem.com/
  */
 namespace bitragem;
 
-class Bitragem {
+abstract class Bitragem {
 
     /**
      * Get Array from JSON URL
@@ -559,7 +559,7 @@ class bitcointrade extends Bitragem {
         if (!in_array($asset, self::$assets)) {
             return null;
         }
-        $data = self::get_url_contents('https://api.bitcointrade.com.br/v2/public/BRLBTC/ticker')['data'];
+        $data = self::get_url_contents('https://api.bitcointrade.com.br/v2/public/BRL' . $asset . '/ticker')['data'];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
@@ -1536,7 +1536,7 @@ class satoshitango extends Bitragem {
 }
 
 class tembtc extends Bitragem {
-    static private $assets = array('BTC', 'LTC', 'BCH');
+    static private $assets = array('BTC', 'BCH', 'ETH', 'LTC', 'DASH');
     public function getBook($asset) {
 
         if (!in_array($asset, self::$assets)) {
