@@ -2,7 +2,7 @@
 
 /**
  * Bitragem's official php lib
- * v 1.1.1
+ * v 1.1.2
  * https://bitragem.com/
  */
 namespace bitragem;
