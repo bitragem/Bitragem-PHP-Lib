@@ -54,4 +54,4 @@ echo json_encode(bitragem\pagcripto::getAssets());
 
 ```
 
-Visit: https://Bitragem.com
+Visit: https://bitragem.com
