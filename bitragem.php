@@ -2,7 +2,7 @@
 
 /**
  * Bitragem's official php lib
- * v 1.1.2
+ * v 1.1.3
  * https://bitragem.com/
  */
 
@@ -435,60 +435,6 @@ class bitcointoyou extends Bitragem
         return self::$markets;
     }
 }
-/* nao existe mais */
-class bitja extends Bitragem
-{
-    private static $markets = array('BRL' => array('BTC', 'ETH', 'LTC', 'DASH', 'DCR', 'XLM'));
-    public static function getBook($asset, $market)
-    {
-
-        if (isset(self::$markets[$market])) {
-            if (!in_array($asset, self::$markets[$market])) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-
-        $newBook['id'] = self::get_id(__CLASS__);
-        $newBook['asset'] = $asset;
-        $newBook['base'] = $market;
-        $book = self::get_url_contents('https://api.bitja.com.br/api/coins/ticker/' . strtolower($asset) . 'brl');
-
-        $newBook['asks'][] = array(
-            'price' => floatval($book['price_sell']),
-            'volume' => 1,
-        );
-
-        $newBook['bids'][] = array(
-            'price' => floatval($book['price_buy']),
-            'volume' => 1,
-        );
-
-        return $newBook;
-    }
-    public static function getTicker($asset, $market)
-    {
-        if (isset(self::$markets[$market])) {
-            if (!in_array($asset, self::$markets[$market])) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-        $data = self::get_url_contents('https://api.bitja.com.br/api/coins/ticker/' . strtolower($asset) . 'brl');
-        $ticker['last'] = null;
-        $ticker['ask'] = floatval($data['price_sell']);
-        $ticker['bid'] = floatval($data['price_buy']);
-        $ticker['vol'] = floatval($data['volume24h']);
-        $ticker['id'] = self::get_id(__CLASS__);
-        return $ticker;
-    }
-    public static function getMarkets()
-    {
-        return self::$markets;
-    }
-}
 
 class bitnuvem extends Bitragem
 {
@@ -701,59 +647,6 @@ class bitcointrade extends Bitragem
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
-        $ticker['id'] = self::get_id(__CLASS__);
-        return $ticker;
-    }
-    public static function getMarkets()
-    {
-        return self::$markets;
-    }
-}
-/* não existe mais */
-class brabex extends Bitragem
-{
-    private static $markets = array('BRL' => array('BTC'));
-    public static function getBook($asset, $market)
-    {
-        if (isset(self::$markets[$market])) {
-            if (!in_array($asset, self::$markets[$market])) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-        $newBook['id'] = self::get_id(__CLASS__);
-        $newBook['asset'] = $asset;
-        $newBook['base'] = $market;
-        $book = self::get_url_contents('https://exchange.brabex.com.br/api/v1/BRL/orderbook?crypto_currency=BTC');
-        for ($i = 0; $i < count($book['asks']); $i++) {
-            $newBook['asks'][] = array(
-                'price' => floatval($book['asks'][$i][0]),
-                'volume' => floatval($book['asks'][$i][1]),
-            );
-        }
-        for ($i = 0; $i < count($book['bids']); $i++) {
-            $newBook['bids'][] = array(
-                'price' => floatval($book['bids'][$i][0]),
-                'volume' => floatval($book['bids'][$i][1]),
-            );
-        }
-        return $newBook;
-    }
-    public static function getTicker($asset, $market)
-    {
-        if (isset(self::$markets[$market])) {
-            if (!in_array($asset, self::$markets[$market])) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-        $data = self::get_url_contents('https://exchange.brabex.com.br/api/v1/BRL/ticker?crypto_currency=BTC');
-        $ticker['last'] = $data['last'];
-        $ticker['ask'] = $data['sell'];
-        $ticker['bid'] = $data['buy'];
-        $ticker['vol'] = $data['vol'];
         $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
