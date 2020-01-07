@@ -2,7 +2,7 @@
 
 /**
  * Bitragem's official php lib
- * v 1.1.4
+ * v 1.1.5
  * https://bitragem.com/
  */
 
@@ -241,7 +241,7 @@ class bitblue extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://bitblue.com/api/order-book/' . strtolower($asset))['order-book'];
+        $book = self::get_url_contents("https://bitblue.com/api/order-book?market=$asset&currency=$asset")['order-book'];
         for ($i = 0; $i < count($book['ask']); $i++) {
             $newBook['asks'][] = array(
                 'price' => $book['ask'][$i]['price'],
@@ -271,7 +271,7 @@ class bitblue extends Bitragem
         $ticker['last'] = $data['last_price'];
         $ticker['ask'] = $data['ask'];
         $ticker['bid'] = $data['bid'];
-        $ticker['vol'] = $data['24h_volume']/$data['last_price'];
+        $ticker['vol'] = $data['24h_volume'] / $data['last_price'];
         $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
     }
@@ -809,7 +809,7 @@ class braziliex extends Bitragem
 
 class btcbolsa extends Bitragem
 {
-    private static $markets = array('BRL' => array('BTC', 'LTC'));
+    private static $markets = array('BRL' => array('BTC'));
     public static function getBook($asset, $market)
     {
         if (isset(self::$markets[$market])) {
@@ -846,10 +846,10 @@ class btcbolsa extends Bitragem
         } else {
             return null;
         }
-        $data = self::get_url_contents('https://apiv2.btcbolsa.com/v2/orders/ticker/' . $asset . '_BRL')['data'];
+        $data = self::get_url_contents('https://apiv2.btcbolsa.com/v2/orders/ticker/' . $asset . '_BRL');
         $ticker['last'] = floatval($data['last']);
-        $ticker['ask'] = floatval($data['buy']);
-        $ticker['bid'] = floatval($data['sell']);
+        $ticker['ask'] = floatval($data['sell']);
+        $ticker['bid'] = floatval($data['buy']);
         $ticker['vol'] = floatval($data['volume']);
         $ticker['id'] = self::get_id(__CLASS__);
         return $ticker;
@@ -1072,7 +1072,7 @@ class citcoin extends Bitragem
         }
         $book = self::getBook('BTC', 'BRL');
         $data = self::get_url_contents('https://api.citcoin.com.br/v1/btc/ticker/');
-        $ticker['last'] = ($book['asks'][0]['price']+$book['bids'][0]['price'])/2;
+        $ticker['last'] = ($book['asks'][0]['price'] + $book['bids'][0]['price']) / 2;
         $ticker['ask'] = $book['asks'][0]['price'];
         $ticker['bid'] = $book['bids'][0]['price'];
         $ticker['vol'] = floatval($data['volume']);
@@ -1388,7 +1388,7 @@ class newcash extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://newcash.exchange/apiv2/ordens/' . $asset . ':BRL');
+        $book = self::get_url_contents("https://newcash.exchange/apiv2/ordens/$asset:BRL");
         for ($i = 0; $i < count($book['venda']); $i++) {
             $newBook['asks'][] = array(
                 'price' => floatval($book['venda'][$i]['preco']),
@@ -1430,6 +1430,7 @@ class newcash extends Bitragem
 class omnitrade extends Bitragem
 {
     private static $markets = array('BRL' => array('BTC', 'BCH', 'BTG', 'DCR', 'DASH', 'ETH', 'LTC', 'XRP'));
+    private static $entryPoint = "https://omnitrade.io/api/v2";
     public static function getBook($asset, $market)
     {
 
@@ -1444,7 +1445,7 @@ class omnitrade extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://omnitrade.io/api/v2/order_book?market=' . strtolower($asset) . 'brl&asks_limit=200&bids_limit=200');
+        $book = self::get_url_contents(self::$entryPoint . '/order_book?market=' . strtolower($asset) . 'brl&asks_limit=200&bids_limit=200');
 
         for ($i = 0; $i < count($book['asks']); $i++) {
             $newBook['asks'][] = array(
@@ -1487,6 +1488,7 @@ class omnitrade extends Bitragem
 class pagcripto extends Bitragem
 {
     private static $markets = array('BRL' => array('BTC', 'DASH', 'LTC'));
+    private static $entryPoint = "https://api.pagcripto.com.br/v2/public";
     public static function getBook($asset, $market)
     {
 
@@ -1501,18 +1503,18 @@ class pagcripto extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://api.pagcripto.com.br/v2/public/orders/' . $asset . 'BRL')['data'];
+        $book = self::get_url_contents(self::$entryPoint . '/orders/' . $asset . 'BRL')['data'];
 
-        for ($i = 0; $i < count($book['data']['asks']); $i++) {
+        for ($i = 0; $i < count($book['asks']); $i++) {
             $newBook['asks'][] = array(
-                'price' => floatval($book['data']['asks'][$i]['cot']),
-                'volume' => floatval($book['data']['asks'][$i]['qtd']),
+                'price' => floatval($book['asks'][$i]['price']),
+                'volume' => floatval($book['asks'][$i]['amount']),
             );
         }
-        for ($i = 0; $i < count($book['data']['bids']); $i++) {
+        for ($i = 0; $i < count($book['bids']); $i++) {
             $newBook['bids'][] = array(
-                'price' => floatval($book['data']['bids'][$i]['cot']),
-                'volume' => floatval($book['data']['bids'][$i]['qtd']),
+                'price' => floatval($book['bids'][$i]['price']),
+                'volume' => floatval($book['bids'][$i]['amount']),
             );
         }
 
@@ -1527,7 +1529,7 @@ class pagcripto extends Bitragem
         } else {
             return null;
         }
-        $data = self::get_url_contents('https://api.pagcripto.com.br/v2/public/ticker/' . $asset . 'BRL')['data'];
+        $data = self::get_url_contents(self::$entryPoint . '/ticker/' . $asset . 'BRL')['data'];
         $ticker['last'] = $data['last'];
         $ticker['ask'] = floatval($data['sell']);
         $ticker['bid'] = floatval($data['buy']);
@@ -1544,6 +1546,7 @@ class pagcripto extends Bitragem
 class pitaiatrade extends Bitragem
 {
     private static $markets = array('BRL' => array('BTC'));
+    private static $entryPoint = "https://api.pitaiatrade.com/v1";
     public static function getBook($asset, $market)
     {
 
@@ -1558,7 +1561,7 @@ class pitaiatrade extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://api.pitaiatrade.com/v1/orderbook');
+        $book = self::get_url_contents(self::$entryPoint . '/orderbook');
 
         for ($i = 0; $i < count($book['asks']); $i++) {
             $newBook['asks'][] = array(
@@ -1584,8 +1587,8 @@ class pitaiatrade extends Bitragem
         } else {
             return null;
         }
-        $data = self::get_url_contents('https://api.pitaiatrade.com/v1/ticker')['ticker'];
-        $ticker['last'] = null;
+        $data = self::get_url_contents(self::$entryPoint . '/ticker')['ticker'];
+        $ticker['last'] = ($data['sell'] + $data['buy']) / 2;
         $ticker['ask'] = $data['sell'];
         $ticker['bid'] = $data['buy'];
         $ticker['vol'] = $data['volume'];
@@ -1662,7 +1665,7 @@ class satoshitango extends Bitragem
         'EUR' => array('BTC', 'BCH', 'ETH', 'LTC', 'XRP'),
         'USD' => array('BTC', 'BCH', 'ETH', 'LTC', 'XRP')
     );
-
+    private static $entryPoint = "https://api.satoshitango.com/v3/ticker";
     public static function getBook($asset, $market)
     {
 
@@ -1677,7 +1680,7 @@ class satoshitango extends Bitragem
         $newBook['id'] = self::get_id(__CLASS__);
         $newBook['asset'] = $asset;
         $newBook['base'] = $market;
-        $book = self::get_url_contents('https://api.satoshitango.com/v3/ticker/' + $market)['data']['ticker'][$asset];
+        $book = self::get_url_contents(self::$entryPoint . "/$market")['data']['ticker'][$asset];
 
         $newBook['asks'][] = array(
             'price' => $book['ask'],
@@ -1700,8 +1703,8 @@ class satoshitango extends Bitragem
         } else {
             return null;
         }
-        $data = self::get_url_contents('https://api.satoshitango.com/v3/ticker/' + $market)['data']['ticker'][$asset];
-        $ticker['last'] = null;
+        $data = self::get_url_contents(self::$entryPoint . "/$market")['data']['ticker'][$asset];
+        $ticker['last'] = ($data['ask'] + $data['bid']) / 2;
         $ticker['ask'] = $data['ask'];
         $ticker['bid'] = $data['bid'];
         $ticker['vol'] = $data['volume'];
