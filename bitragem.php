@@ -1233,7 +1233,7 @@ class foxbit extends Bitragem
                 break;
         }
 
-        $book = self::get_url_contents('https://apifoxbitprodlb.alphapoint.com:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=' . $asset . '&Depth=1');
+        $book = self::get_url_contents('https://api.foxbit.com.br:8443/AP/GetL2Snapshot?OMSId=1&InstrumentId=' . $asset . '&Depth=1');
 
         for ($i = 0; $i < count($book); $i++) {
             if ($book[$i][9] == 1) {
